@@ -8,6 +8,7 @@ function App() {
     <div className="App">
       <h1>Shopping App</h1>
       <ProductFeed />
+      Hello
     </div>
   );
 }
