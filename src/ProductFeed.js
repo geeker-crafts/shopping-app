@@ -1,5 +1,6 @@
 import React from 'react';
 import axios from 'axios';
+import { CartCard } from './CartCard';
 
 export default class ProductFeed extends React.Component {
     constructor(props){
@@ -110,6 +111,7 @@ export default class ProductFeed extends React.Component {
 
     componentDidMount(){
         this.loadProducts();
+
         localStorage.getItem('cartID') ?
         this.loadCartDataIfAlreadyCreated() :
         this.createCartForFirstTime();
@@ -128,19 +130,21 @@ export default class ProductFeed extends React.Component {
     }
 
     render(){
+
+        const { cartData: { id, total_unique_items, subtotal } } = this.state;
+
         return(
-            <div>
+            <React.Fragment>
                 {
-                    this.state.cartData.id && (
-                        <div className="card" style={{width: '18rem', margin: 'auto'}}>
-                            <div className="card-body">
-                                <h5 className="card-title">Total Products - {this.state.cartData.total_unique_items}</h5>
-                                <h6 className="card-subtitle mb-2 text-muted">Total Cart Value - {this.state.cartData.subtotal.formatted_with_symbol} </h6>
-                                <button className='btn btn-success'>Checkout</button>
-                            </div>
-                        </div>
-                    )
+                    id &&
+                    <CartCard
+                        title={'Cart'}
+                        totalProducts={total_unique_items}
+                        totalValue={subtotal.formatted_with_symbol}
+                        onFeed={true}
+                    />
                 }
+
                 <div style={{display: 'flex', flexWrap: 'wrap'}}>
                     {
                         this.state.products.map((product, index) => {
@@ -161,9 +165,8 @@ export default class ProductFeed extends React.Component {
                         })
                     }
                 </div>
-            </div>
+
+            </React.Fragment>
         )
     }
 }
-
-
