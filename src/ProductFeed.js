@@ -1,8 +1,9 @@
 import React from 'react';
 import axios from 'axios';
 import { CartCard } from './CartCard';
+import { connect } from "react-redux";
 
-export default class ProductFeed extends React.Component {
+class ProductFeed extends React.Component {
     constructor(props){
         super(props);
         this.state = {
@@ -132,9 +133,14 @@ export default class ProductFeed extends React.Component {
     render(){
 
         const { cartData: { id, total_unique_items, subtotal } } = this.state;
+        const { count } = this.props;
+
+        console.log(this.props);
 
         return(
             <React.Fragment>
+                <p>Message count {this.props.count}</p>
+                <button onClick={() => { this.props.changeMessageCount() }}>Change count</button>
                 {
                     id &&
                     <CartCard
@@ -170,3 +176,18 @@ export default class ProductFeed extends React.Component {
         )
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+        count: state.messageCount
+    }
+}
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        changeMessageCount: () => { dispatch({type: 'CHANGE_COUNT', data: 20}) }
+    }
+}
+
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProductFeed);

@@ -2,8 +2,9 @@ import React from 'react';
 import axios from  'axios';
 import { CartCard } from './CartCard';
 import { Counter } from './Counter';
+import { connect } from 'react-redux';
 
-export default class Checkout extends React.Component {
+class Checkout extends React.Component {
     constructor(props){
         super(props);
 
@@ -82,6 +83,7 @@ export default class Checkout extends React.Component {
 
         return(
             <React.Fragment>
+                <p>Count is {this.props.count}</p>
                 <div>
                     <CartCard
                         totalProducts={totalItems}
@@ -120,3 +122,17 @@ export default class Checkout extends React.Component {
         )
     }
 }
+
+const mapStateToProps = (state) => {
+    return {
+      count: state.messageCount
+    }
+}
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Checkout);
