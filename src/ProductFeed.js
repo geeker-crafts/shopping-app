@@ -2,14 +2,14 @@ import React from 'react';
 import axios from 'axios';
 import { CartCard } from './CartCard';
 import { connect } from "react-redux";
+import { bindActionCreators } from 'redux'
+import { loadCartDataIfAlreadyCreated, createCartForFirstTime, addItemToCart } from './apiCalls/index';
 
 class ProductFeed extends React.Component {
     constructor(props){
         super(props);
         this.state = {
             products: [],
-            cartData: {},
-            cartProductIds: []
         }
     }
 
@@ -34,105 +34,29 @@ class ProductFeed extends React.Component {
         })
     }
 
-    createCartForFirstTime = () => {
-        axios({
-            url: "https://api.chec.io/v1/carts",
-            method: 'GET',
-            headers: {
-                "X-Authorization": "pk_18506b82013b046be195347e8aaa4de88f31e549b7943",
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            }
-        }).then((response) => {
-            let cartID = response.data.id;
-
-            localStorage.setItem('cartID', cartID)
-
-            this.setState({
-                cartData: response.data
-            })
-        }).catch((err) => {
-            console.log(err)
-        })
-    }
-
-    loadCartDataIfAlreadyCreated = () => {
-        axios({
-            url:  `https://api.chec.io/v1/carts/${localStorage.getItem('cartID')}`,
-            method: 'GET',
-            headers: {
-                "X-Authorization": "pk_18506b82013b046be195347e8aaa4de88f31e549b7943",
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            }
-        }).then((response) => {
-            let cartProductIds = response.data.line_items.map((item, index) => {
-                return item.product_id
-            })
-
-            this.setState({
-                cartData: response.data,
-                cartProductIds: cartProductIds
-            })
-        }).catch((err) => {
-            console.log(err)
-        })
-    }
-
-    addItemToCart = (productID) => {
-        let cartID = localStorage.getItem('cartID');
-
-        axios({
-            url: `https://api.chec.io/v1/carts/${cartID}`,
-            method: "POST",
-            headers: {
-                "X-Authorization": "pk_18506b82013b046be195347e8aaa4de88f31e549b7943",
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            },
-            data: {
-                "id": productID,
-                "quantity": 1
-            }
-        }).then((response) => {
-
-            let cartProductIds = response.data.cart.line_items.map((item, index) => {
-                return item.product_id
-            })
-
-            this.setState({
-                cartData: response.data.cart,
-                cartProductIds: cartProductIds
-            })
-        }).catch((error) => {
-            console.logI(error)
-        })
-
-    }
-
     componentDidMount(){
         this.loadProducts();
 
         localStorage.getItem('cartID') ?
-        this.loadCartDataIfAlreadyCreated() :
-        this.createCartForFirstTime();
+        this.props.loadCardData() :
+        this.props.createCart()
     }
 
     renderButton = (productID) => {
-        if(this.state.cartProductIds.includes(productID)){
+        if(this.props.cartProductIds.includes(productID)){
             return(
                 <button className="btn btn-secondary">Added</button>
             )
         } else {
             return (
-                <button className="btn btn-success" onClick={() => {this.addItemToCart(productID)}}>Add Item</button>
+                <button className="btn btn-success" onClick={() => {this.props.addItemToCart(productID)}}>Add Item</button>
             )
         }
     }
 
     render(){
 
-        const { cartData: { id, total_unique_items, subtotal } } = this.state;
+        const { cartData: { id, total_unique_items, subtotal } } = this.props;
         const { count } = this.props;
 
         console.log(this.props);
@@ -179,13 +103,18 @@ class ProductFeed extends React.Component {
 
 const mapStateToProps = (state) => {
     return {
-        count: state.messageCount
+        count: state.messageCount,
+        cartData: state.cartData,
+        cartProductIds: state.cartProductIds
     }
 }
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        changeMessageCount: () => { dispatch({type: 'CHANGE_COUNT', data: 20}) }
+        changeMessageCount: () => { dispatch({type: 'CHANGE_COUNT', data: 20}) },
+        loadCardData: bindActionCreators(loadCartDataIfAlreadyCreated, dispatch),
+        createCart: bindActionCreators(createCartForFirstTime, dispatch),
+        addItemToCart: bindActionCreators(addItemToCart, dispatch)
     }
 }
 

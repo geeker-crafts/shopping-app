@@ -3,83 +3,14 @@ import axios from  'axios';
 import { CartCard } from './CartCard';
 import { Counter } from './Counter';
 import { connect } from 'react-redux';
+import { handleDelete } from './apiCalls/index'
+import { bindActionCreators } from 'redux';
 
 class Checkout extends React.Component {
-    constructor(props){
-        super(props);
-
-        this.state = {
-            cartItems: [],
-            totalItems: null,
-            totalValue: null
-        }
-    }
-
-    componentDidMount(){
-        let cartID = localStorage.getItem('cartID');
-
-        axios({
-            url: `https://api.chec.io/v1/carts/${cartID}/items`,
-            method: 'GET',
-            headers: {
-                "X-Authorization": "pk_18506b82013b046be195347e8aaa4de88f31e549b7943",
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            }
-        }).then((response) => {
-            this.setState({
-                cartItems: response.data
-            })
-        }).catch((err) => {
-            console.log(err)
-        })
-
-
-        axios({
-            url: `https://api.chec.io/v1/carts/${cartID}`,
-            method: 'GET',
-            headers: {
-                "X-Authorization": "pk_18506b82013b046be195347e8aaa4de88f31e549b7943",
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            }
-        }).then((response) => {
-            this.setState({
-                totalItems: response.data.total_unique_items,
-                totalValue: response.data.subtotal.formatted_with_symbol
-            })
-
-        }).catch((err) => {
-            console.log(err)
-        })
-    }
-
-    handleDelete = (itemID) => {
-        let cartID = localStorage.getItem('cartID');
-
-        axios({
-            url:  `https://api.chec.io/v1/carts/${cartID}/items/${itemID}`,
-            method: 'DELETE',
-            headers: {
-                "X-Authorization": "pk_18506b82013b046be195347e8aaa4de88f31e549b7943",
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            }
-        }).then((response) => {
-            console.log(response)
-            this.setState({
-                cartItems: response.data.cart.line_items,
-                totalItems: response.data.cart.total_unique_items,
-                totalValue: response.data.cart.subtotal.formatted_with_symbol
-            })
-        }).catch((error) => {
-            console.log(error)
-        })
-    }
-
     render(){
 
-        const { totalItems, totalValue, cartItems } = this.state;
+        const { cartData: { line_items = [], total_unique_items: totalItems, subtotal = {}}} = this.props;
+        const { formatted_with_symbol: totalValue}  = subtotal;
 
         return(
             <React.Fragment>
@@ -93,7 +24,7 @@ class Checkout extends React.Component {
                 </div>
                 <div>
                     {
-                        cartItems.map((cartItem, index) => {
+                        line_items.map((cartItem, index) => {
                             const {media: { source }, name, price: { formatted_with_symbol }, quantity, id  } = cartItem;
 
                             return (
@@ -109,7 +40,7 @@ class Checkout extends React.Component {
                                             <p className="card-text">
                                                 <Counter quantity={quantity} />
                                             </p>
-                                            <button className='btn btn-danger' onClick={() => {this.handleDelete(id)}}>Delete</button>
+                                            <button className='btn btn-danger' onClick={() => {this.props.handleDelete(id)}}>Delete</button>
                                         </div>
                                         </div>
                                     </div>
@@ -125,13 +56,15 @@ class Checkout extends React.Component {
 
 const mapStateToProps = (state) => {
     return {
-      count: state.messageCount
+      count: state.messageCount,
+      cartData: state.cartData,
+      cartProductIds: state.cartProductIds
     }
 }
 
 const mapDispatchToProps = (dispatch) => {
     return {
-
+        handleDelete: bindActionCreators(handleDelete, dispatch)
     }
 }
 
